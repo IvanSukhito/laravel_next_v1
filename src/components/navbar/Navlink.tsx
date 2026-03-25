@@ -1,17 +1,52 @@
 "use client";
 
-import { useState } from 'react';
-import { IoClose, IoMenu } from 'react-icons/io5';
+import { useEffect, useState } from 'react';
+import { IoClose, IoMenu, IoPerson  } from 'react-icons/io5';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { myAppHook } from '@/context/AppProvider';
+import DropdownMenuItems from '../DropdownMenuItems';
+import Cookies from "js-cookie";
+
 
 const Navlink = () => {
 
     const [open, setOpen] = useState(false);
-    
-    const {logout, authToken} = myAppHook();
+    const [isReady, setIsReady] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const {logout, authToken, isLoading, login} = myAppHook();
+    const name = Cookies.get("name");
+    // const [authToken, setAuthToken] = useState(false);
+    const dropdownMenuItems = [
+        {
+            menuLabel: "my-account",
+            menuItems : [
+                {iconMenu: "/images/icons/icon-todo.svg", label: "profile", pathName: "/my-profile"},
+                {iconMenu: "/images/icons/icon-calendar.svg", label: "history", pathName: "/my-history"},
+                // {iconMenu: "/images/icons/icon-planning.svg", label: "logout", pathName: "logout"}
+            ]
+        },
+     
+    ];
+    // const menuItems = [{
+    //     iconMenu: "/images/icons/icon-todo.svg",
+    //     label: "My profile"
+    // }];
 
+    // if (isLoading) return null; // Atau tampilkan skeleton/spinner kecil
+    console.log(authToken);
+    console.log(open);
+    console.log("login");
+
+    useEffect(()=>{
+        if(authToken !==  null){
+            setIsReady(true)
+        }else{
+            setIsReady(false)
+        }
+    },[authToken]);
+
+    console.log("is Ready",isReady);
     return (
     <>
     <button onClick={() => setOpen(!open)} className='inline-flex items-center p-2 justify-center text-sm 
@@ -74,7 +109,7 @@ const Navlink = () => {
                 className='block py-2 px-3 text-gray-800
                  hover:bg-gray-100 rounded-sm
                  md:hover:bg-transparent md:p-0'>
-                    My Reservations
+                    Reservations
                 </Link>
             </li> 
             <li> 
@@ -85,15 +120,25 @@ const Navlink = () => {
                  md:hover:bg-transparent md:p-0'>
                     Manage Rooms
                 </Link>
-                {/* <Link>About</Link> */}
+              
             </li>
+            {/* <li>
+                <DropdownMenuItems label="My account"/>
+            </li> */}
             <li className="pt-2 md:pt-0">
                 
                 {authToken ? (
                     <>
-                    <button onClick={logout} className='py-2.5 px-6 bg-orange-400 text-white hover:bg-orange-500 rounded-sm'>
-                        SIGN OUT
-                    </button>
+                    {/* <DropdownMenuItems label="My account" icon="my-account"/> */}
+                    {dropdownMenuItems.map((dropdownMenuItem) => {
+                        return (
+                        <DropdownMenuItems 
+                        key={dropdownMenuItem.menuLabel}
+                        label={name ? name : dropdownMenuItem.menuLabel} 
+                        icon="my-account"
+                        menuItems={dropdownMenuItem.menuItems}/>
+                        );
+                    })}
                     </>
                 ): (
                     <>

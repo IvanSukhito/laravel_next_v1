@@ -4,8 +4,10 @@ import { Raleway } from "next/font/google";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/navbar/Navbar";
 import { AppProvider } from "@/context/AppProvider";
+import Loader from "@/components/Loader";
 // import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
+import Wrapper from "./wrapper";
 
 const raleway = Raleway({
   variable: "--font-raleway",
@@ -27,13 +29,15 @@ export default function RootLayout({
       <body
         className={`${raleway.variable} antialiased`}>
           <AppProvider>
-           <Navbar/>
+          <Navbar/>
+          <Wrapper> 
           <main className="bg-gray-50 min-h-screen">
             {children}
           </main>
-          <Footer/>
-
+          </Wrapper>
+          <Footer/>   
           </AppProvider>
+          
          
       </body>
     </html>

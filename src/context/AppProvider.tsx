@@ -36,7 +36,8 @@ export const AppProvider = ({
         const token = Cookies.get("authToken");
         if(token){
             setAuthToken(token)
-        }else{
+        }
+        else{
             router.push('/sign-in')
         }
     })
@@ -55,9 +56,11 @@ export const AppProvider = ({
                 Cookies.set("authToken", response.data.data._token, {
                     expires: 1
                 })
+                Cookies.set("name", response.data.data.data.name)
                 toast.success("Login success");
                 setAuthToken(response.data.data._token)
                 router.push('/my/dashboard')
+                console.log("response data", response.data.data.data.name)
                 console.log(response.data.data._token)
             }else{
                 toast.success("Invalid Login Details");

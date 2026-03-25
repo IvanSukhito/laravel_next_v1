@@ -1,2 +1,78 @@
 @import "tailwindcss";
 
+/* Container utama untuk Loader Overlay */
+.loader-overlay {
+    position: fixed; /* Wajib FIXED agar menutupi Navbar */
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100%;
+    /* background-color: white; Ubah ke putih agar logo UBM terlihat jelas */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Styling untuk titik-titik (Dots) */
+.dots {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dots span {
+    position: absolute;
+    /* Ukuran titik tetap sama, tapi jumlahnya lebih banyak */
+    height: 10px; 
+    width: 10px;
+    border-radius: 50%;
+    background: orangered; 
+    
+  
+    transform: rotate(calc(var(--i) * (300deg / 30) - 30deg)) translateY(-90px);
+    animation: animate 1.5s linear infinite;
+    animation-delay: calc(var(--i) * 0.06s);
+    opacity: 0;
+}
+
+@keyframes animate {
+    0% {
+        opacity: 0;
+        /* Mulai sedikit lebih dalam (cekung ke dalam) */
+        transform: rotate(calc(var(--i) * (300deg / 30) - 30deg)) translateY(-85px) scale(0.5);
+    }
+    50% {
+        opacity: 1;
+        /* Titik paling terang di tengah perjalanan */
+        transform: rotate(calc(var(--i) * (300deg / 30) - 30deg)) translateY(-90px) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        /* Menghilang sambil sedikit melebar keluar (cekung ke luar) */
+        transform: rotate(calc(var(--i) * (300deg / 30) - 30deg)) translateY(-95px) scale(0.5);
+    }
+}
+
+.animate-logo-active {
+  /* Memulai dari kondisi abu-abu total */
+  filter: grayscale(100%) brightness(80%); 
+  animation: logo-active-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes logo-active-glow {
+  0%, 100% {
+    /* Kondisi awal/akhir: Abu-abu, redup, tanpa pendaran */
+    filter: grayscale(100%) 
+            brightness(80%) 
+            drop-shadow(0 0 0 rgba(255, 69, 0, 0)); 
+  }
+  50% {
+    /* Kondisi puncak (menyala): Warna asli kembali, terang, pendaran oranye kuat */
+    filter: grayscale(0%) /* Warna asli logo kembali */
+            brightness(100%) /* Sedikit lebih terang dari aslinya */
+            drop-shadow(0 0 10px rgba(255, 255, 255, 0.9)) /* Pendaran oranye */
+            drop-shadow(0 0 10px rgba(237, 147, 36, 0.6)); /* Pendaran tambahan */
+  }
+}
