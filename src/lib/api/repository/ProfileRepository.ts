@@ -10,7 +10,7 @@ export const getProfile = (token?: string): Promise<ProfileResponse> =>
             SHOW_PROFILE_URL,
             token ? {
                 headers: {
-                    Cookie: `token: ${token}`
+                    Cookie: `authToken: ${token}`
                 }
             } : undefined
         )
@@ -18,6 +18,7 @@ export const getProfile = (token?: string): Promise<ProfileResponse> =>
         if(!res.data){
             throw new Error("Null data response");
         }
+        console.log("profile :",res.data);
         return res.data;
 
     },"getProfile");

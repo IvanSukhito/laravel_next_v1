@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { myAppHook } from '@/context/AppProvider';
 import DropdownMenuItems from '../DropdownMenuItems';
 import Cookies from "js-cookie";
+import { useProfileContext } from '@/context/ProfileContext';
 
 
 const Navlink = () => {
@@ -14,8 +15,8 @@ const Navlink = () => {
     const [open, setOpen] = useState(false);
     const [isReady, setIsReady] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const {logout, authToken, isLoading, login} = myAppHook();
-    const name = Cookies.get("name");
+    const {logout, authToken, login, profile} = useProfileContext();
+    // const name = Cookies.get("name");
     // const [authToken, setAuthToken] = useState(false);
     const dropdownMenuItems = [
         {
@@ -34,19 +35,16 @@ const Navlink = () => {
     // }];
 
     // if (isLoading) return null; // Atau tampilkan skeleton/spinner kecil
-    console.log(authToken);
-    console.log(open);
-    console.log("login");
+
 
     useEffect(()=>{
-        if(authToken !==  null){
+        if(profile){
             setIsReady(true)
         }else{
             setIsReady(false)
         }
-    },[authToken]);
-
-    console.log("is Ready",isReady);
+    },[profile]);
+    console.log("profile", profile);
     return (
     <>
     <button onClick={() => setOpen(!open)} className='inline-flex items-center p-2 justify-center text-sm 
@@ -127,14 +125,15 @@ const Navlink = () => {
             </li> */}
             <li className="pt-2 md:pt-0">
                 
-                {authToken ? (
+                {profile ? (
                     <>
                     {/* <DropdownMenuItems label="My account" icon="my-account"/> */}
                     {dropdownMenuItems.map((dropdownMenuItem) => {
                         return (
                         <DropdownMenuItems 
                         key={dropdownMenuItem.menuLabel}
-                        label={name ? name : dropdownMenuItem.menuLabel} 
+                        label={profile.name ? profile.name : dropdownMenuItem.menuLabel} 
+                        // label={dropdownMenuItem.menuLabel} 
                         icon="my-account"
                         menuItems={dropdownMenuItem.menuItems}/>
                         );

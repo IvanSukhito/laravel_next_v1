@@ -1,8 +1,10 @@
-import { myAppHook } from '@/context/AppProvider';
+
+import { useProfileContext } from '@/context/ProfileContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 import { IconBase } from 'react-icons';
+import { useRouter } from 'next/navigation'; // IMPORT INI
 
 
 export type MenuItem = {
@@ -15,7 +17,19 @@ interface Props {
 }
   
 const DropdownMenu = ({ menuItems }: Props) => {
-    const {logout} = myAppHook();
+    // const {logout} = useProfileContext();
+    const { logout } = useProfileContext();
+    const router = useRouter(); // INISIALISASI ROUTER
+
+    const handleLogout = async () => {
+        const success = await logout();
+        // Mau success true atau false (misal token udah expired), 
+        // kita paksa pindah ke halaman login
+        console.log("logout ", success);
+        if(success){
+          router.push("/sign-in");
+        }
+    };
     
   return (
     <div
@@ -63,7 +77,7 @@ const DropdownMenu = ({ menuItems }: Props) => {
         );
       })}
       {/* logout terpisah */}
-        <a key="logout" onClick={logout} style={
+        <a key="logout" onClick={handleLogout} style={
             {
                 display: "flex",
                 alignItems: "center",

@@ -6,6 +6,7 @@ import { Metadata } from 'next'
 import {FaEye, FaEyeSlash} from "react-icons/fa6"
 import { myAppHook } from '@/context/AppProvider';
 import { useRouter } from 'next/navigation';
+import { useProfileContext } from '@/context/ProfileContext';
 // export const metadata:Metadata = {
 //     title : "Sign In",
 // }
@@ -31,13 +32,14 @@ const SignInPage = () => {
 
   const router = useRouter();
 
-  const { login, register, authToken, isLoading } = myAppHook();
+//   const { login, register, authToken, isLoading } = myAppHook();
+  const { register, login, loginLoading, loginError, refreshProfile } = useProfileContext(); 
 
-  useEffect(() => {
-    if(authToken){
-        router.push("/my/dashboard")
-    }
-  }, [authToken, isLoading])
+//   useEffect(() => {
+//     if(authToken){
+//         router.push("/my/dashboard")
+//     }
+//   }, [authToken, isLoading])
 
   const handleOnChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -46,37 +48,70 @@ const SignInPage = () => {
     })
   }
 
-  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if(isLogin){
+//   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+//     event.preventDefault();
+//     if(isLogin){
 
-        try {
+//         try {
             
-            await login(formData.email, formData.password)
+//             await login(formData.email, formData.password)
+//             alert("Login Submited");
 
-        } catch (error) {
-
-            console.log(`Error Auth ${error}`)
-
-        }
-        alert("Login Submited");
-    }else{
-
-        try {
-            
-            await register(formData.name!, formData.email, formData.password, formData.confirm_password!)
+//         } catch (error) {
+//             console.log(`Error Auth ${error}`)
+//         }
         
-        } catch (error) {
+//     }else{
+
+//         try {
             
-            console.log(`Error Auth ${error}`)
+//             await register(formData.name!, formData.email, formData.password, formData.confirm_password!)
+//             alert("Register Submited"); 
+        
+//         } catch (error) {
             
+//             console.log(`Error Auth ${error}`)
+            
+//         }
+        
+//     }
+//   }
+
+const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("email", formData.email);
+    if (isLogin) {
+        const success = await login({
+            email: formData.email,
+            password: formData.password
+        });
+        if (success){
+            router.push("/my/dashboard");
+            console.log("sukses login");
         }
-        alert("Register Submited"); 
+    } else {
+        // LOGIKA SIGN UP
+        if (formData.password !== formData.confirm_password) {
+            alert("Password tidak cocok!");
+            return;
+        }
+        
+        const success = await register({
+          name: formData.name || "",
+          email: formData.email || "",
+          password: formData.password || "",
+          confirmPassword: formData.confirm_password || ""
+        });
+
+        if (success) {
+            alert("Registrasi berhasil! Silakan login.");
+            setIsLogin(true); // Pindah ke form login
+        }
     }
-  }
-//   useEffect(() => {
-//   console.log("Status Password Saat Ini:", showPassword);
-//   }, [showPassword]); // Ini artinya: "Jalanin log ini setiap kali showPassword berubah"
+};
+  useEffect(() => {
+  console.log("Status Password Saat Ini:", showPassword);
+  }, [showPassword]); // Ini artinya: "Jalanin log ini setiap kali showPassword berubah"
 
   return (
     <div className='min-h-screen flex items-center'> 

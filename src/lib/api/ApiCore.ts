@@ -1,10 +1,13 @@
 import { BASE_URL } from "@/constants/Urls";
 import { CustomError } from "@/types/CustomError";
 import BaseResponse from "@/types/responses/BaseResponse";
+import Cookies from "js-cookie";
+
 
 export type ApiFetchOptions = RequestInit & {
     redirecton401?: boolean;
 }
+const token = typeof window !== 'undefined' ? Cookies.get('authToken') : null;
 
 export async function coreApiFetch<T>(
     endpoint: string,
@@ -12,9 +15,11 @@ export async function coreApiFetch<T>(
 ): Promise<BaseResponse<T>> {
     const response = await fetch(`${BASE_URL}${endpoint}`,{
         ...options,
-        credentials: "include",
+        credentials: "same-origin",
         headers:{
             "Content-Type":"application/json",
+            "Accept": "application/json", // TAMBAHKAN INI
+            ...(token ? { "Authorization": `Bearer ${token}` } : {}),
             ...(options.headers || {}),
         },
     });

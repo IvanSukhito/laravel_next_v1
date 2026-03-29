@@ -1,0 +1,157 @@
+"use client";
+
+import { useLogin, useLogout, useRegister } from "@/hooks/AuthHooks";
+import { useProfile } from "@/hooks/ProfileHooks";
+import { CustomError } from "@/types/CustomError";
+import LoginErrorResponse from "@/types/responses/auth/login/LoginErrorResponse";
+import React, { useCallback, useContext, useEffect, useMemo } from "react";
+import { createContext } from 'react'; // Pastikan dari 'react'
+import Cookies from 'js-cookie';
+
+
+type ProfileContextType = {
+    authToken: string | null,
+    profile: ReturnType<typeof useProfile>["profile"];
+    profileLoading: boolean;
+    profileReady: boolean;
+    profileError: CustomError | undefined;
+    refreshProfile: () => Promise<void>;
+
+    login: (data: Parameters<ReturnType<typeof useLogin>["login"]>[0]) => Promise<boolean>;
+    loginLoading: boolean;
+    loginError: CustomError<LoginErrorResponse> | undefined;
+    
+    logout: () => Promise<boolean>;
+    logoutLoading: boolean;
+    logoutError: CustomError | undefined;
+
+    register: (data: Parameters<ReturnType<typeof useRegister>["register"]>[0]) => Promise<boolean>;
+    registerLoading: boolean;
+    registerError: CustomError | undefined;
+};
+
+const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
+
+type ProfileProviderProps = {
+    children: React.ReactNode;
+    initialProfile?: ReturnType<typeof useProfile>["profile"];
+}
+
+export const ProfileProvider: React.FC<ProfileProviderProps> = ({children, initialProfile}) => {
+    const [authToken, setAuthToken] = React.useState<string|null>(null);
+    const {profile, setProfile, fetchProfile, loading: profileLoading, error: profileError} = useProfile();
+
+    const [profileReady, setProfileReady] = React.useState(false);
+
+    // useEffect(() => {
+    //     if(initialProfile !== undefined){
+    //         setProfile(initialProfile);
+    //     }
+    //     setProfileReady(true);
+    // },[initialProfile, setProfile]);
+    useEffect(() => {
+        const initAuth = async () => {
+            // Pastikan nama key-nya konsisten (pake auth_token)
+            const savedToken = Cookies.get('auth_token'); 
+
+            if (savedToken){
+                setAuthToken(savedToken);
+                await fetchProfile();
+            }
+            setProfileReady(true);
+        }
+        initAuth();
+    }, [fetchProfile]) // Tambahin fetchProfile di dep biar gak warning
+
+    const {login: doLogin, loading: loginLoading, error: loginError} = useLogin();
+    const {logout: doLogout, loading: logoutLoading, error: logoutError} = useLogout();
+    const { register: doRegister, loading: registerLoading, error: registerError } = useRegister();
+
+    const refreshProfile = useCallback(async () => {
+        await fetchProfile();
+    },[fetchProfile]);
+
+    const login = useCallback(async (data: Parameters<typeof doLogin>[0]) => {
+        const success = await doLogin(data);
+        console.log("tes", data);
+        if(success){
+            await refreshProfile();
+        }
+        return success;
+    },[doLogin]);
+
+    const logout = useCallback(async () => {
+        const success = await doLogout();
+        console.log("sukses logout", success);
+
+        // Apapun hasilnya (sukses atau gagal dari BE), kita harus bersih-bersih di FE
+        if(success || !success) { 
+            // JANGAN panggil refreshProfile() di sini karena token udah dibuang
+            Cookies.remove('auth_token'); 
+            setAuthToken(null);
+            setProfile(undefined);
+        }
+        return true; // Paksa return true biar router.push di komponen jalan
+    }, [doLogout, setProfile]);
+
+    const register = useCallback(async (data: Parameters<typeof doRegister>[0]) => {
+    const success = await doRegister(data);
+    if (success) {
+        // Biasanya setelah register tidak langsung refresh profile 
+        // kecuali API register otomatis melakukan login.
+        // Jika tidak, biarkan user login manual.
+    }
+    return success;
+    }, [doRegister]);
+
+    const value = useMemo(
+        () => ({
+            profile,
+            profileLoading,
+            profileError,
+            profileReady,
+            refreshProfile,
+            login,
+            loginError,
+            loginLoading,
+            logout,
+            logoutError,
+            logoutLoading,
+            // Tambahkan ini:
+            register,
+            registerLoading,
+            registerError,
+            authToken,
+        }),[
+            profile,
+            profileLoading,
+            profileError,
+            profileReady,
+            refreshProfile,
+            login,
+            loginLoading,
+            loginError,
+            logout,
+            logoutError,
+            logoutLoading,
+            // Dan tambahkan dependency-nya di sini:
+            register,
+            registerLoading,
+            registerError,
+            authToken,
+
+        ]
+    );
+
+    return <ProfileContext.Provider value={value}>
+            {children}
+            </ProfileContext.Provider>
+}
+
+export const useProfileContext = () => {
+    const context = useContext(ProfileContext);
+    if(!context){
+        throw new Error("use Profile harus digunakan dengan ProfileProveider")
+    }
+    return context;
+}

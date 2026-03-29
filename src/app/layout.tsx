@@ -8,6 +8,7 @@ import Loader from "@/components/Loader";
 // import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import Wrapper from "./wrapper";
+import { ProfileProvider } from "@/context/ProfileContext";
 
 const raleway = Raleway({
   variable: "--font-raleway",
@@ -28,7 +29,8 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${raleway.variable} antialiased`}>
-          <AppProvider>
+          {/* <AppProvider> */}
+          <ProfileProvider>
           <Navbar/>
           <Wrapper> 
           <main className="bg-gray-50 min-h-screen">
@@ -36,7 +38,8 @@ export default function RootLayout({
           </main>
           </Wrapper>
           <Footer/>   
-          </AppProvider>
+          </ProfileProvider>
+          {/* </AppProvider> */}
           
          
       </body>
