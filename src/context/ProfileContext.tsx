@@ -15,13 +15,13 @@ type ProfileContextType = {
     profileLoading: boolean;
     profileReady: boolean;
     profileError: CustomError | undefined;
-    refreshProfile: () => Promise<void>;
+    refreshProfile: (data?: any) => Promise<void>;
 
     login: (data: Parameters<ReturnType<typeof useLogin>["login"]>[0]) => Promise<boolean>;
     loginLoading: boolean;
     loginError: CustomError<LoginErrorResponse> | undefined;
     
-    logout: () => Promise<boolean>;
+    logout: (data?: any) => Promise<boolean>;
     logoutLoading: boolean;
     logoutError: CustomError | undefined;
 
@@ -40,59 +40,93 @@ type ProfileProviderProps = {
 export const ProfileProvider: React.FC<ProfileProviderProps> = ({children, initialProfile}) => {
     const [authToken, setAuthToken] = React.useState<string|null>(null);
     const {profile, setProfile, fetchProfile, loading: profileLoading, error: profileError} = useProfile();
-
+    const [isLoggingOut, setIsLoggingOut] = React.useState(false);
     const [profileReady, setProfileReady] = React.useState(false);
 
-    // useEffect(() => {
-    //     if(initialProfile !== undefined){
-    //         setProfile(initialProfile);
-    //     }
-    //     setProfileReady(true);
-    // },[initialProfile, setProfile]);
-    useEffect(() => {
-        const initAuth = async () => {
-            // Pastikan nama key-nya konsisten (pake auth_token)
-            const savedToken = Cookies.get('auth_token'); 
-
-            if (savedToken){
-                setAuthToken(savedToken);
-                await fetchProfile();
-            }
-            setProfileReady(true);
-        }
-        initAuth();
-    }, [fetchProfile]) // Tambahin fetchProfile di dep biar gak warning
+    // console.log(fetchProfile);   
 
     const {login: doLogin, loading: loginLoading, error: loginError} = useLogin();
     const {logout: doLogout, loading: logoutLoading, error: logoutError} = useLogout();
     const { register: doRegister, loading: registerLoading, error: registerError } = useRegister();
 
-    const refreshProfile = useCallback(async () => {
-        await fetchProfile();
-    },[fetchProfile]);
+
+    const refreshProfile = useCallback(async (authToken?: string) => {
+        await fetchProfile(authToken);
+
+        if (isLoggingOut) {
+        setProfile(undefined);
+        }
+    },[fetchProfile, setProfile, isLoggingOut]);
+
+     useEffect(() => {
+     const initAuth = async () => {
+        // 1. Cek apakah ada data dari server (SSR)
+        if (initialProfile !== undefined) {
+            setProfile(initialProfile);
+            setProfileReady(true);
+            return; // Berhenti di sini jika sudah ada data server
+        }
+
+        // 2. Jika tidak ada data server (berarti user baru saja REFRESH)
+        const savedToken = Cookies.get('authToken');
+        if (savedToken) {
+            try {
+                // Ambil data terbaru dari API menggunakan token di Cookie
+                await refreshProfile(savedToken); 
+            } catch (err) {
+                console.error("Token tidak valid saat refresh", err);
+                Cookies.remove('authToken');
+            }
+        }
+
+        // 3. Tandai proses inisialisasi selesai
+        setProfileReady(true);
+    };
+
+    initAuth();
+    }, [initialProfile,setProfile]);
 
     const login = useCallback(async (data: Parameters<typeof doLogin>[0]) => {
-        const success = await doLogin(data);
-        console.log("tes", data);
-        if(success){
-            await refreshProfile();
+        const res = await doLogin(data);
+        const token = res?.data?._token || res?._token;
+        console.log("tesssss", res);
+        if(res){
+            await refreshProfile(token);
+            setAuthToken(res._token);
+            setProfileReady(true);
+            return true;
         }
-        return success;
-    },[doLogin]);
+        return false;
+    },[doLogin, refreshProfile]);
 
-    const logout = useCallback(async () => {
+    const logout = useCallback(async (authToken?: string) => {
         const success = await doLogout();
-        console.log("sukses logout", success);
-
-        // Apapun hasilnya (sukses atau gagal dari BE), kita harus bersih-bersih di FE
-        if(success || !success) { 
-            // JANGAN panggil refreshProfile() di sini karena token udah dibuang
-            Cookies.remove('auth_token'); 
+        // if (success) {
+            console.log("udah logout");
+            await refreshProfile(authToken);
             setAuthToken(null);
             setProfile(undefined);
-        }
-        return true; // Paksa return true biar router.push di komponen jalan
-    }, [doLogout, setProfile]);
+            Cookies.remove('authToken');
+            Cookies.remove('name');
+            localStorage.removeItem('authToken');
+            setProfileReady(true); // Jika kamu pakai localStorage juga
+        // }
+        return true;
+    }, [doLogout]);
+
+    // const logout = useCallback(async () => {
+    //     const success = await doLogout();
+    //     console.log("sukses logout", success);
+
+    //     // Apapun hasilnya (sukses atau gagal dari BE), kita harus bersih-bersih di FE
+    //     if(success || !success) { 
+    //         // JANGAN panggil refreshProfile() di sini karena token udah dibuang
+    //         Cookies.remove("authToken")
+    //         setAuthToken(null);
+    //         setProfile(undefined);
+    //     }
+    //     return true; // Paksa return true biar router.push di komponen jalan
+    // }, [doLogout, setProfile]);
 
     const register = useCallback(async (data: Parameters<typeof doRegister>[0]) => {
     const success = await doRegister(data);

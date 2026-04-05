@@ -8,10 +8,10 @@ export function useProfile(){
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<CustomError>();
 
-    const fetchProfile = async() =>{
+    const fetchProfile = async(token?: string) =>{
         setLoading(true);
         try{
-            setProfile(await getProfile());
+            setProfile(await getProfile(token));
         }catch (error: any){
             setError(error);
             setProfile(undefined);

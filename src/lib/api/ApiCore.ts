@@ -23,6 +23,7 @@ export async function coreApiFetch<T>(
             ...(options.headers || {}),
         },
     });
+    
 
     if (response.status === 401){
         if(options.redirecton401){

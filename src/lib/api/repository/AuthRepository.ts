@@ -27,15 +27,14 @@ import toast from "react-hot-toast";
             throw new Error("Login gagal, token tidak ditemukan");
             }
         
-        // SIMPAN TOKEN KE LOCALSTORAGE
             if (typeof window !== 'undefined') {
             Cookies.set("authToken", token, {
                     expires: 1
             })
-            Cookies.set("name", res.data?.data.name)
+            // Cookies.set("name", res.data?.data.name)
             toast.success("Login success");
             // setAuthToken(token)
-            localStorage.setItem('auth_token', token);
+            localStorage.setItem('authToken', token);
             }
             
             return res.data;
@@ -45,9 +44,16 @@ import toast from "react-hot-toast";
 
 export const postLogout = (): Promise<BaseResponse> => 
     WrapWithCustomError(async () => {
-        return await ApiFetchSecured(LOGOUT_URL, {
+      const res = await ApiFetchSecured(LOGOUT_URL, {
           method: "POST"  
-        })
+        });
+
+        // Hapus cookie dan localStorage SEBELUM return
+        Cookies.remove("authToken");
+        Cookies.remove("name");
+        localStorage.removeItem('authToken');
+        
+        return res; // Return diletakkan di paling bawah
     },"postLogout");
 
 export const postRegister = (data: RegisterRequest) : Promise<BaseResponse> => 

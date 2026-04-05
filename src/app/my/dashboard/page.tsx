@@ -1,20 +1,58 @@
 
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useProfileContext } from '@/context/ProfileContext'; // Gunakan Context yang baru kita buat
 import { useRouter } from 'next/navigation';
+import Cookies from "js-cookie";
+
 
 const MyDashboardPage = () => {
     // Ambil data profile dan status loading dari context
-    const { profile, profileLoading, profileReady, logout } = useProfileContext();
+    const [loading, setLoading] = useState(false);
+    const token = Cookies.get("authToken") || null;
+
+
+    const { profile, profileLoading, profileReady, logout, refreshProfile } = useProfileContext();
     const router = useRouter();
 
+    const handleLogout = async () => {
+        setLoading(true);
+        try {
+            const success = await logout(token);
+            if (success) {
+                // Redirect langsung ke sign-in setelah bersih-bersih di context
+                // router.push("/sign-in");
+                window.location.href = "/sign-in";
+                router.refresh();
+            }
+        } catch (error) {
+            console.error("Logout failed", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    console.log("profile ready", profileReady);
+    console.log("profiless ", profile);
     useEffect(() => {
         // Jika pengecekan profile selesai dan ternyata tidak ada user (null)
         if (profileReady && !profile) {
             router.push("/sign-in");
+            return;
         }
+        // 2. Jika kamu ingin MEMASTIKAN data paling segar saat masuk dashboard
+        // tapi jangan masukkan 'profile' ke dependency array di bawah
+        const syncData = async () => {
+            const token = Cookies.get("authToken");
+            if (token && !profile) { // Hanya panggil jika profile belum ada di state
+                await refreshProfile(token);
+            }
+        };
+
+    syncData();
+        
+        // await refreshProfile(token);
     }, [profile, profileReady, router]);
 
     // Tampilkan Loading jika data sedang diambil
@@ -40,11 +78,7 @@ const MyDashboardPage = () => {
                     </div>
                     
                     <button 
-                        onClick={async () => {
-                            const success = await logout();
-                            // if(success) router.push("/sign-in");
-                            router.push("/sign-in");
-                        }}
+                        onClick={handleLogout}
                         className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-sm transition shadow-sm"
                     >
                         Sign Out

@@ -48,45 +48,19 @@ const SignInPage = () => {
     })
   }
 
-//   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-//     event.preventDefault();
-//     if(isLogin){
-
-//         try {
-            
-//             await login(formData.email, formData.password)
-//             alert("Login Submited");
-
-//         } catch (error) {
-//             console.log(`Error Auth ${error}`)
-//         }
-        
-//     }else{
-
-//         try {
-            
-//             await register(formData.name!, formData.email, formData.password, formData.confirm_password!)
-//             alert("Register Submited"); 
-        
-//         } catch (error) {
-            
-//             console.log(`Error Auth ${error}`)
-            
-//         }
-        
-//     }
-//   }
-
 const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("email", formData.email);
     if (isLogin) {
-        const success = await login({
+        const res = await login({
             email: formData.email,
             password: formData.password
         });
-        if (success){
+        console.log("sukses Logins", res);
+        if (res){
+            // await refreshProfile(res.data._token);           
             router.push("/my/dashboard");
+            router.refresh();
             console.log("sukses login");
         }
     } else {
@@ -96,21 +70,21 @@ const handleFormSubmit = async (e: React.FormEvent) => {
             return;
         }
         
-        const success = await register({
+        const res = await register({
           name: formData.name || "",
           email: formData.email || "",
           password: formData.password || "",
           confirmPassword: formData.confirm_password || ""
         });
 
-        if (success) {
+        if (res) {
             alert("Registrasi berhasil! Silakan login.");
             setIsLogin(true); // Pindah ke form login
         }
     }
 };
   useEffect(() => {
-  console.log("Status Password Saat Ini:", showPassword);
+//   console.log("Status Password Saat Ini:", showPassword);
   }, [showPassword]); // Ini artinya: "Jalanin log ini setiap kali showPassword berubah"
 
   return (

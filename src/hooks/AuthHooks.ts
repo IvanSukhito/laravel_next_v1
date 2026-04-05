@@ -3,6 +3,7 @@ import { CustomError } from "@/types/CustomError";
 import LoginRequest from "@/types/request/auth/login/LoginRequest";
 import RegisterRequest from "@/types/request/auth/register/RegisterRequest";
 import LoginErrorResponse from "@/types/responses/auth/login/LoginErrorResponse";
+import LoginResponse from "@/types/responses/auth/login/LoginResponse";
 import { use, useState } from "react";
 
 
@@ -11,7 +12,7 @@ export function useLogin(){
     const [error, setError] = useState<CustomError<LoginErrorResponse>>();
     const [authToken, setAuthToken] = useState<string|null>(null)
 
-    const login = async (data: LoginRequest): Promise<boolean> => {
+    const login = async (data: LoginRequest): Promise<LoginResponse | null> => {
         setLoading(true);
         setError(undefined); // <-- Penting: Reset error setiap kali mulai login baru
         try{
@@ -27,7 +28,10 @@ export function useLogin(){
             //     console.log("response data", response.data.data.data.name)
             //     console.log(response.data.data._token)
             // }
-            return true;
+            return response;
+            
+        // return success;
+            // return true;
 
         }catch(error: unknown){
             if(error instanceof CustomError){
@@ -36,7 +40,7 @@ export function useLogin(){
             console.log("apakah ke mari");
             console.log("Detail Error Login:", error);
             // console.log("Pesan Error:", error.message);
-            return false;
+            return null;
         }finally{
             setLoading(false);
         }

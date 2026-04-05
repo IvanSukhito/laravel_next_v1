@@ -13,16 +13,16 @@ import { useProfileContext } from '@/context/ProfileContext';
 const Navlink = () => {
 
     const [open, setOpen] = useState(false);
-    const [isReady, setIsReady] = useState(false);
+    // const [isReady, setIsReady] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const {logout, authToken, login, profile} = useProfileContext();
+    const {logout, authToken, login, profile, profileReady, refreshProfile} = useProfileContext();
     // const name = Cookies.get("name");
     // const [authToken, setAuthToken] = useState(false);
     const dropdownMenuItems = [
         {
             menuLabel: "my-account",
             menuItems : [
-                {iconMenu: "/images/icons/icon-todo.svg", label: "profile", pathName: "/my-profile"},
+                {iconMenu: "/images/icons/icon-todo.svg", label: "profile", pathName: "/my/dashboard"},
                 {iconMenu: "/images/icons/icon-calendar.svg", label: "history", pathName: "/my-history"},
                 // {iconMenu: "/images/icons/icon-planning.svg", label: "logout", pathName: "logout"}
             ]
@@ -36,15 +36,9 @@ const Navlink = () => {
 
     // if (isLoading) return null; // Atau tampilkan skeleton/spinner kecil
 
-
-    useEffect(()=>{
-        if(profile){
-            setIsReady(true)
-        }else{
-            setIsReady(false)
-        }
-    },[profile]);
-    console.log("profile", profile);
+    if (!profileReady) return null; 
+    // console.log("profiless", profile);
+    
     return (
     <>
     <button onClick={() => setOpen(!open)} className='inline-flex items-center p-2 justify-center text-sm 
@@ -126,20 +120,18 @@ const Navlink = () => {
             <li className="pt-2 md:pt-0">
                 
                 {profile ? (
-                    <>
-                    {/* <DropdownMenuItems label="My account" icon="my-account"/> */}
-                    {dropdownMenuItems.map((dropdownMenuItem) => {
-                        return (
-                        <DropdownMenuItems 
-                        key={dropdownMenuItem.menuLabel}
-                        label={profile.name ? profile.name : dropdownMenuItem.menuLabel} 
-                        // label={dropdownMenuItem.menuLabel} 
-                        icon="my-account"
-                        menuItems={dropdownMenuItem.menuItems}/>
-                        );
-                    })}
-                    </>
-                ): (
+                        <div className="flex items-center text-gray-800"> {/* Beri warna gelap di sini */}
+                           {dropdownMenuItems.map((dropdownMenuItem) => (
+                             <DropdownMenuItems 
+                               key={dropdownMenuItem.menuLabel}
+                               // Jika profile.name ada, pakai itu, jika tidak pakai label default
+                               label={profile.name || dropdownMenuItem.menuLabel} 
+                               icon="my-account" // Pastikan icon 'my-account' merender IoPerson
+                               menuItems={dropdownMenuItem.menuItems}
+                             />
+                           ))}
+                        </div>
+                      ): (
                     <>
                     <Link href="/sign-in" className='py-2.5 px-6 bg-orange-400 text-white hover:bg-orange-500 rounded-sm'>
                         SIGN IN

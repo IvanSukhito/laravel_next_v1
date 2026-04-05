@@ -1,10 +1,11 @@
-
+'use client';
 import { useProfileContext } from '@/context/ProfileContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 import { IconBase } from 'react-icons';
 import { useRouter } from 'next/navigation'; // IMPORT INI
+import Cookies from "js-cookie";
 
 
 export type MenuItem = {
@@ -18,16 +19,30 @@ interface Props {
   
 const DropdownMenu = ({ menuItems }: Props) => {
     // const {logout} = useProfileContext();
-    const { logout } = useProfileContext();
-    const router = useRouter(); // INISIALISASI ROUTER
+    // const { logout } = useProfileContext();
+    // const router = useRouter(); // INISIALISASI ROUTER
+    const [loading, setLoading] = useState(false);
+    const token = Cookies.get("authToken") || null;
+    
+    const { profile, profileLoading, profileReady, logout, refreshProfile } = useProfileContext();
+    const router = useRouter();
+    
+
 
     const handleLogout = async () => {
-        const success = await logout();
-        // Mau success true atau false (misal token udah expired), 
-        // kita paksa pindah ke halaman login
-        console.log("logout ", success);
-        if(success){
-          router.push("/sign-in");
+        setLoading(true);
+        try {
+            const success = await logout(token);
+            if (success) {
+                // Redirect langsung ke sign-in setelah bersih-bersih di context
+                // router.push("/sign-in");
+                window.location.href = "/sign-in";
+                router.refresh();
+            }
+        } catch (error) {
+            console.error("Logout failed", error);
+        } finally {
+            setLoading(false);
         }
     };
     
